@@ -59,6 +59,8 @@ export const login = async (req, res) => {
   try {
     const user = await User.findOne({ email });
 
+    // console.log(user);
+
     if (!user || user.isGoogleUser) {
       return res.status(401).json({ message: "Invalid credentials" });
     }

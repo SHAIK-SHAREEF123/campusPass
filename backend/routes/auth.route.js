@@ -23,7 +23,9 @@ router.post("/login", validate(loginSchema), login);
 router.post("/google-login", validate(googleLoginSchema), googleLogin);
 router.post("/logout", logout);
 
-router.get("/me", verifyToken, getMyProfile);
-router.put("/update", verifyToken, updateMyProfile);
+router.get("/profile", verifyToken, getMyProfile);
+router.put("/profile/update", verifyToken, updateMyProfile);
+
+
 
 export default router;

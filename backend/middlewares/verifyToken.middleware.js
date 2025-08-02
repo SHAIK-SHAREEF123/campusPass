@@ -4,7 +4,7 @@ import User from "../models/user.model.js";
 export const verifyToken = async (req, res, next) => {
   try {
     const token = req.cookies.token;
-    console.log(token);
+    // console.log(token);
 
     if (!token) {
       return res
@@ -24,6 +24,7 @@ export const verifyToken = async (req, res, next) => {
       }
 
       req.user = user;
+      // console.log(req.user);
       next();
     } catch (err) {
       if (err.name === "TokenExpiredError") {
