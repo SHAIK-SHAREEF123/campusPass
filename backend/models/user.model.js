@@ -9,10 +9,19 @@ const userSchema = new mongoose.Schema(
     isGoogleUser: { type: Boolean, default: false },
     role: {
       type: String,
-      enum: ["student", "parent", "warden", "security"],
+      enum: ["student", "parent", "caretaker", "security"],
       default: "student",
     },
     photo: { type: String, default: "" },
+
+    // 🔽 Add hostel reference here
+    hostelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Hostel",
+      required: function () {
+        return ["student", "caretaker"].includes(this.role);
+      },
+    },
   },
   { timestamps: true }
 );

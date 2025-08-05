@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { maxLength } from "zod";
+import QRCode from "qrcode";
 
 const outpassSchema = new mongoose.Schema({
   student: {
@@ -25,30 +25,99 @@ const outpassSchema = new mongoose.Schema({
     required: true,
   },
   parentContact: {
-    type: Number,
+    type: String,
     required: true,
-    maxLength: 10,
+    validate: {
+      validator: function (v) {
+        return /^\d{10}$/.test(v);
+      },
+      message: "Parent contact must be a 10-digit number",
+    },
   },
-  parentApprovalStatus: {
+
+  // Approval statuses
+  parentApproval: {
     type: String,
     enum: ["pending", "approved", "rejected"],
     default: "pending",
   },
-  wardenStatus: {
+  caretakerApproval: {
     type: String,
     enum: ["pending", "approved", "rejected"],
     default: "pending",
   },
+
+  // Final status (auto-calculated)
+  status: {
+    type: String,
+    enum: ["pending", "approved", "rejected"],
+    default: "pending",
+  },
+
   createdAt: {
     type: Date,
     default: Date.now,
   },
+
+  // QR-related fields
+  qrCode: {
+    type: String, // base64 image
+    default: null,
+  },
+  qrGeneratedAt: {
+    type: Date,
+    default: null,
+  },
+  isQRUsed: {
+    type: Boolean,
+    default: false,
+  },
+  qrVerifiedAt: {
+    type: Date,
+    default: null,
+  },
+
   photo: {
     type: String,
     required: true,
   },
+
+  processedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
+});
+
+// Auto-status update and QR generation
+outpassSchema.pre("save", async function (next) {
+  if (
+    this.parentApproval === "approved" &&
+    this.caretakerApproval === "approved"
+  ) {
+    this.status = "approved";
+
+    // Generate QR only once
+    if (!this.qrCode) {
+      try {
+        const qrData = `outpass:${this._id}`;
+        const qrImage = await QRCode.toDataURL(qrData);
+        this.qrCode = qrImage;
+        this.qrGeneratedAt = new Date(); // Track for expiry
+      } catch (err) {
+        console.error("QR generation failed:", err);
+      }
+    }
+  } else if (
+    this.parentApproval === "rejected" ||
+    this.caretakerApproval === "rejected"
+  ) {
+    this.status = "rejected";
+  } else {
+    this.status = "pending";
+  }
+
+  next();
 });
 
 const Outpass = mongoose.model("Outpass", outpassSchema);
-
 export default Outpass;

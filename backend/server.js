@@ -7,6 +7,8 @@ import { connectDB } from "./config/db.js";
 
 import authRoutes from "./routes/auth.route.js";
 import outpassRoutes from "./routes/outpass.route.js"
+import hostelRoutes from "./routes/hostel.route.js"
+import dashboardRoutes from "./routes/dashboard.route.js"
 
 dotenv.config();
 connectDB();
@@ -24,6 +26,9 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/outpass", outpassRoutes);
+app.use("/api/hostels", hostelRoutes);
+app.use("/api/dashboard",dashboardRoutes);
+
 
 app.get("/", (req, res) => {
   res.send("CampusPass API is running");

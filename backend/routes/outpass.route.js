@@ -8,8 +8,9 @@ import {
   deleteOutpass,
   approveOutpassByParent,
   rejectOutpassByParent,
-  approveOutpassByWarden,
-  rejectOutpassByWarden,
+  approveOutpassByCaretaker,
+  rejectOutpassByCaretaker,
+  verifyQRCode,
 } from "../controllers/outpass.controller.js";
 
 import { upload } from "../middlewares/upload.middleware.js";
@@ -23,22 +24,25 @@ router.post("/create", verifyToken, authorizeRoles("student"), upload.single("ph
 
 router.get("/my", verifyToken, authorizeRoles("student"), getMyOutpasses);
 
-router.get("/", verifyToken, authorizeRoles("warden"), getAllOutpasses);
+router.get("/", verifyToken, authorizeRoles("caretaker"), getAllOutpasses);
 
 router.get("/:id", verifyToken, getSingleOutpass);
 
 // Update outpass status (approve/reject by admin/warden)
-router.put("/:id/status", verifyToken, authorizeRoles("warden"), updateOutpassStatus);
+router.put("/:id/status", verifyToken, authorizeRoles("caretaker"), updateOutpassStatus);
 
 // Delete an outpass (only by student before approval)
 router.delete("/:id", verifyToken, authorizeRoles("student"), deleteOutpass);
 
-// ----- Parent Approval -----
+// Parent approval
 router.post("/:id/parent/approve", verifyToken, authorizeRoles("parent"), approveOutpassByParent);
 router.post("/:id/parent/reject", verifyToken, authorizeRoles("parent"), rejectOutpassByParent);
 
-// ----- Warden Approval -----
-router.put("/:id/warden/approve", verifyToken, authorizeRoles("warden"), approveOutpassByWarden);
-router.put("/:id/warden/reject", verifyToken, authorizeRoles("warden"), rejectOutpassByWarden);
+// Caretaker approval
+router.put("/:id/caretaker/approve", verifyToken, authorizeRoles("caretaker"), approveOutpassByCaretaker);
+router.put("/:id/caretaker/reject", verifyToken, authorizeRoles("caretaker"), rejectOutpassByCaretaker);
+
+router.post('/verify-qr', verifyQRCode);
+
 
 export default router;
