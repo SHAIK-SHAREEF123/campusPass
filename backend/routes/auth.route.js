@@ -1,10 +1,10 @@
 import express from "express";
 import {
-  register,
+  signup,
   login,
   googleLogin,
   logout,
-  getMyProfile,
+  // getMyProfile,
   updateMyProfile,
 } from "../controllers/auth.controller.js";
 import { validate } from "../middlewares/validate.middleware.js";
@@ -15,16 +15,18 @@ import {
   googleLoginSchema,
 } from "../validators/authValidators.js";
 
+import { upload } from '../config/cloudinary.js';
+
 const router = express.Router();
 
 // Public routes
-router.post("/register", validate(registerSchema), register);
+router.post("/signup", upload.single('profilePhoto'), validate(registerSchema), signup);
 router.post("/login", validate(loginSchema), login);
 router.post("/google-login", validate(googleLoginSchema), googleLogin);
 router.post("/logout", logout);
 
-router.get("/profile", verifyToken, getMyProfile);
-router.put("/profile/update", verifyToken, updateMyProfile);
+// router.get("/profile", verifyToken, getMyProfile);
+router.put("/profile/update", verifyToken, upload.single("profilePhoto"), updateMyProfile);
 
 
 

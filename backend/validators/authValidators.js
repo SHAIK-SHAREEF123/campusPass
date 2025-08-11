@@ -5,7 +5,8 @@ export const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email"),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  role: z.enum(["student", "parent", "caretaker", "security"]) // UPDATED
+  role: z.enum(["admin","student", "parent", "caretaker", "security"]),
+  profilePhoto: z.string().optional(), // This will hold the Cloudinary URL later
 });
 
 // For manual login

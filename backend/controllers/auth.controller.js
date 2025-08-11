@@ -12,38 +12,59 @@ const generateToken = (id) => {
 
 const setToken = (res, token) => {
   res.cookie("token", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  });
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax",
+  path: "/"
+});
+
 };
 
 // REGISTER
-export const register = async (req, res) => {
+export const signup = async (req, res) => {
   const { name, email, password, role } = req.body;
 
+  // console.log(req.body);
   try {
     const userExists = await User.findOne({ email });
-    if (userExists)
+    if (userExists) {
       return res.status(400).json({ message: "User already exists!" });
+    }
 
+    // 🔹 Check if trying to create another admin
+    if (role === "admin") {
+      const adminExists = await User.findOne({ role: "admin" });
+      if (adminExists) {
+        return res
+          .status(400)
+          .json({ message: "There should be only one admin" });
+      }
+    }
+
+    // Cloudinary photo URL from multer storage
+    const profilePhoto = req.file ? req.file.path : "";
+
+    // Create new user
     const user = await User.create({
       name,
       email,
       password,
       role,
       isGoogleUser: false,
+      profilePhoto, // store Cloudinary URL here
     });
 
+    // Generate and set token
     const token = generateToken(user._id);
     setToken(res, token);
 
+    // Respond with user data
     res.status(201).json({
       _id: user._id,
       name: user.name,
       email: user.email,
       role: user.role,
+      profilePhoto: user.profilePhoto,
       token,
     });
   } catch (error) {
@@ -54,7 +75,9 @@ export const register = async (req, res) => {
 
 // LOGIN
 export const login = async (req, res) => {
+  // console.log("Poor Login : ");
   const { email, password } = req.body;
+  // console.log(email);
 
   try {
     const user = await User.findOne({ email });
@@ -71,14 +94,17 @@ export const login = async (req, res) => {
     }
 
     const token = generateToken(user._id);
+
     setToken(res, token);
 
-    res.json({
+    res.status(200).json({
       _id: user._id,
       name: user.name,
       email: user.email,
       role: user.role,
+      profilePhoto: user.profilePhoto,
       token,
+      message: "Logged in successfully",
     });
   } catch (error) {
     console.error("Error in login controller:", error.message);
@@ -130,40 +156,43 @@ export const logout = (req, res) => {
     res.clearCookie("token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "lax",
+      path: "/",
     });
-
-    res.status(200).json({ message: "Logged out successfully" });
+    return res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Logout failed", error: error.message });
+    return res.status(500).json({ message: "Logout failed", error: error.message });
   }
 };
+
 
 // GET MY PROFILE
-export const getMyProfile = async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id).select("-password");
-    if (!user) return res.status(404).json({ message: "User not found" });
+// export const getMyProfile = async (req, res) => {
+//   try {
+//     const user = await User.findById(req.user._id).select("-password");
+//     if (!user) return res.status(404).json({ message: "User not found" });
 
-    res.status(200).json(user);
-  } catch (error) {
-    res.status(500).json({ message: "Failed to get profile", error: error.message });
-  }
-};
+//     res.status(200).json(user);
+//   } catch (error) {
+//     res.status(500).json({ message: "Failed to get profile", error: error.message });
+//   }
+// };
 
 // UPDATE MY PROFILE
 export const updateMyProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
-
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const { name, email, password, photo} = req.body;
+    const { name, password } = req.body;
 
     if (name) user.name = name;
-    if (email) user.email = email;
-    if (password) user.password = password;
-    if (photo) user.photo = photo;
+    if (password) user.password = password; // hashed on save if you have middleware
+
+    // If Cloudinary upload succeeded
+    if (req.file && req.file.path) {
+      user.profilePhoto = req.file.path; // Cloudinary URL
+    }
 
     await user.save();
 
@@ -174,10 +203,12 @@ export const updateMyProfile = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        photo: user.photo,
+        profilePhoto: user.profilePhoto,
       },
     });
   } catch (error) {
-    res.status(500).json({ message: "Failed to update profile", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Failed to update profile", error: error.message });
   }
 };

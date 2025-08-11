@@ -239,8 +239,6 @@ export const rejectOutpassByCaretaker = async (req, res) => {
   }
 };
 
-import Outpass from "../models/Outpass.js";
-
 export const verifyQRCode = async (req, res) => {
   try {
     const { qrCodeData } = req.body; // Expected to be the Outpass ID
