@@ -4,7 +4,7 @@ import { logout } from "../redux/authSlice";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
-// React Icons imports
+// React Icons
 import { FaUserCircle, FaCog, FaSignOutAlt, FaSignInAlt } from "react-icons/fa";
 import { HiMenu, HiX } from "react-icons/hi";
 
@@ -16,14 +16,11 @@ export default function Navbar() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const dropdownRef = useRef();
 
-    const handleClickOutside = useCallback(
-        (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setDropdownOpen(false);
-            }
-        },
-        [setDropdownOpen]
-    );
+    const handleClickOutside = useCallback((event) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+            setDropdownOpen(false);
+        }
+    }, []);
 
     useEffect(() => {
         document.addEventListener("mousedown", handleClickOutside);
@@ -37,17 +34,34 @@ export default function Navbar() {
                 {},
                 { withCredentials: true }
             );
-
             dispatch(logout());
             setDropdownOpen(false);
             setMobileMenuOpen(false);
-            toast.success('Logged out successfully!');
+            toast.success("Logged out successfully!");
         } catch (error) {
             console.error("Logout failed:", error);
         }
     };
 
-    const navLinks = [
+    // Role-based nav links
+    const roleLinks = {
+        admin: [
+            { name: "Dashboard", to: "/admin/dashboard" },
+            { name: "Hostels", to: "/hostels" },
+        ],
+        caretaker: [
+            { name: "Dashboard", to: "/caretaker/dashboard" },
+            { name: "Batches", to: "/batches" },
+            { name: "Outpasses", to: "/outpasses" },
+        ],
+        student: [
+            { name: "Dashboard", to: "/student/dashboard" },
+            { name: "My Outpasses", to: "/outpass/my-outpasses" },
+            { name: "Request Outpass", to: "/outpass/request" },
+        ],
+    };
+
+    const navLinks = user?.role ? roleLinks[user.role] || [] : [
         { name: "Home", to: "/" },
         { name: "Features", to: "/features" },
         { name: "About", to: "/about" },
@@ -57,12 +71,12 @@ export default function Navbar() {
         <nav className="sticky top-0 z-50 bg-black bg-opacity-70 backdrop-blur-md border-b border-purple-800 shadow-md pt-1.5 pb-1.5">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
                 <div className="flex items-center justify-between h-16">
-                    {/* Left Logo + Title */}
+                    {/* Logo */}
                     <div className="flex items-center space-x-3">
                         <Link
                             to="/"
                             className="flex items-center focus:outline-none focus:ring-2 focus:ring-purple-400 rounded"
-                            onClick={() => setMobileMenuOpen(false)} // Close mobile menu if open
+                            onClick={() => setMobileMenuOpen(false)}
                         >
                             <img
                                 src="logo.jpeg"
@@ -75,24 +89,30 @@ export default function Navbar() {
                         </Link>
                     </div>
 
-                    {/* Desktop Navigation */}
+                    {/* Desktop Menu */}
                     <div className="hidden md:flex space-x-8 items-center text-lg font-medium text-white">
                         {navLinks.map((link) => (
                             <Link
                                 key={link.name}
                                 to={link.to}
                                 className="hover:text-purple-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded"
-                                onClick={() => setMobileMenuOpen(false)} // Close mobile menu if open
+                                onClick={() => setMobileMenuOpen(false)}
                             >
                                 {link.name}
                             </Link>
                         ))}
-
+                        {user && (
+                            <Link
+                                to="/chat"
+                                className="hover:text-purple-300 transition-colors duration-200"
+                            >
+                                Chat
+                            </Link>
+                        )}
                         {!user ? (
                             <Link
                                 to="/login"
-                                className="flex items-center hover:text-purple-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-purple-400 rounded"
-                                onClick={() => setMobileMenuOpen(false)} // Close mobile menu if open
+                                className="flex items-center hover:text-purple-300 transition-colors duration-200"
                             >
                                 <FaSignInAlt className="mr-1" />
                                 Login
@@ -102,35 +122,30 @@ export default function Navbar() {
                                 <button
                                     onClick={() => setDropdownOpen((open) => !open)}
                                     className="focus:outline-none focus:ring-2 focus:ring-purple-400 rounded-full"
-                                    aria-haspopup="true"
-                                    aria-expanded={dropdownOpen}
-                                    aria-label="User menu"
                                 >
                                     {user.profilePhoto ? (
                                         <img
                                             src={user.profilePhoto}
-                                            alt="User Profile"
+                                            alt="User"
                                             className="w-10 h-10 rounded-full object-cover border-2 border-purple-400 cursor-pointer"
                                         />
                                     ) : (
                                         <FaUserCircle className="w-10 h-10 text-purple-400" />
                                     )}
                                 </button>
-
                                 {dropdownOpen && (
-                                    <div className="absolute right-0 mt-2 w-44 bg-white rounded-md shadow-lg py-2 z-50 ring-1 ring-black ring-opacity-5">
+                                    <div className="absolute right-0 mt-2 w-44 bg-white rounded-md shadow-lg py-2 z-50">
                                         <Link
                                             to="/profile"
-                                            className="flex items-center px-4 py-2 text-gray-700 hover:bg-purple-100 transition-colors duration-150"
+                                            className="flex items-center px-4 py-2 text-gray-700 hover:bg-purple-100"
                                             onClick={() => setDropdownOpen(false)}
                                         >
                                             <FaUserCircle className="mr-2 text-purple-600" />
                                             My Profile
                                         </Link>
-
                                         <Link
                                             to="/settings"
-                                            className="flex items-center px-4 py-2 text-gray-700 hover:bg-purple-100 transition-colors duration-150"
+                                            className="flex items-center px-4 py-2 text-gray-700 hover:bg-purple-100"
                                             onClick={() => setDropdownOpen(false)}
                                         >
                                             <FaCog className="mr-2 text-purple-600" />
@@ -138,7 +153,7 @@ export default function Navbar() {
                                         </Link>
                                         <button
                                             onClick={handleLogout}
-                                            className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-purple-100 transition-colors duration-150 text-left"
+                                            className="flex items-center w-full px-4 py-2 text-gray-700 hover:bg-purple-100"
                                         >
                                             <FaSignOutAlt className="mr-2 text-purple-600" />
                                             Logout
@@ -149,24 +164,20 @@ export default function Navbar() {
                         )}
                     </div>
 
-                    {/* Mobile menu button */}
+                    {/* Mobile Menu Button */}
                     <div className="md:hidden flex items-center">
                         <button
-                            onClick={() => setMobileMenuOpen((open) => !open)}
+                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                             aria-label="Toggle mobile menu"
-                            className="inline-flex items-center justify-center p-2 rounded-md text-purple-400 hover:text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-purple-400"
+                            className="inline-flex items-center justify-center p-2 rounded-md text-purple-400 hover:text-white hover:bg-purple-700"
                         >
-                            {mobileMenuOpen ? (
-                                <HiX className="block h-6 w-6" />
-                            ) : (
-                                <HiMenu className="block h-6 w-6" />
-                            )}
+                            {mobileMenuOpen ? <HiX className="h-6 w-6" /> : <HiMenu className="h-6 w-6" />}
                         </button>
                     </div>
                 </div>
             </div>
 
-            {/* Mobile menu */}
+            {/* Mobile Menu */}
             {mobileMenuOpen && (
                 <div className="md:hidden bg-black bg-opacity-80 backdrop-blur-md border-t border-purple-800">
                     <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
@@ -174,42 +185,59 @@ export default function Navbar() {
                             <Link
                                 key={link.name}
                                 to={link.to}
-                                className="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-purple-700 hover:text-white transition-colors duration-200"
+                                className="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-purple-700"
                                 onClick={() => setMobileMenuOpen(false)}
                             >
                                 {link.name}
                             </Link>
                         ))}
+                        {user && (
+                            <Link
+                                to="/chat"
+                                className="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-purple-700"
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                Chat
+                            </Link>
+                        )}
                         {!user ? (
                             <Link
                                 to="/login"
-                                className="flex items-center px-3 py-2 rounded-md text-base font-medium text-white hover:bg-purple-700 hover:text-white transition-colors duration-200"
+                                className="flex items-center px-3 py-2 text-base font-medium text-white hover:bg-purple-700"
                                 onClick={() => setMobileMenuOpen(false)}
                             >
                                 <FaSignInAlt className="mr-2" />
                                 Login
                             </Link>
                         ) : (
-                            <div
-                                className="border-t border-purple-700 mt-2 pt-2"
-                                ref={dropdownRef}
-                            >
+                            <>
+                                <Link
+                                    to="/profile"
+                                    className="flex items-center px-3 py-2 text-base font-medium text-white hover:bg-purple-700"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                >
+                                    <FaUserCircle className="mr-2 text-purple-300" />
+                                    My Profile
+                                </Link>
                                 <Link
                                     to="/settings"
-                                    className="flex items-center px-3 py-2 rounded-md text-base font-medium text-white hover:bg-purple-700 transition-colors duration-200"
+                                    className="flex items-center px-3 py-2 text-base font-medium text-white hover:bg-purple-700"
                                     onClick={() => setMobileMenuOpen(false)}
                                 >
                                     <FaCog className="mr-2 text-purple-300" />
                                     Settings
                                 </Link>
                                 <button
-                                    onClick={handleLogout}
-                                    className="flex items-center w-full px-3 py-2 rounded-md text-base font-medium text-white hover:bg-purple-700 transition-colors duration-200 text-left"
+                                    onClick={() => {
+                                        handleLogout();
+                                        setMobileMenuOpen(false);
+                                    }}
+                                    className="flex items-center w-full px-3 py-2 text-base font-medium text-white hover:bg-purple-700"
                                 >
                                     <FaSignOutAlt className="mr-2 text-purple-300" />
                                     Logout
                                 </button>
-                            </div>
+                            </>
                         )}
                     </div>
                 </div>

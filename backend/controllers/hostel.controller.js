@@ -6,7 +6,8 @@ import mongoose from "mongoose";
 export const createHostel = async (req, res) => {
   try {
     const { name } = req.body;
-
+    // console.log(name);
+    
     const existingHostel = await Hostel.findOne({ name });
     if (existingHostel) {
       return res.status(400).json({ message: "Hostel name already exists" });
@@ -65,9 +66,10 @@ export const getAllHostels = async (req, res) => {
 
 // Get a single hostel by ID (role-specific access)
 export const getHostelById = async (req, res) => {
+  // console.log("req.params:", req.params);
+
   try {
     const { hostelId } = req.params;
-    const user = req.user;
 
     const hostel = await Hostel.findById(hostelId)
       .populate("admin", "name email")
@@ -78,72 +80,21 @@ export const getHostelById = async (req, res) => {
       return res.status(404).json({ message: "Hostel not found" });
     }
 
-    if (user.role === "admin") {
-      return res.status(200).json({ hostel });
-    }
-
-    if (user.role === "caretaker") {
-      const isAssigned = hostel.caretakers.some(
-        (c) => c._id.toString() === user._id.toString()
-      );
-
-      if (!isAssigned) {
-        return res.status(403).json({ message: "Not assigned to this hostel" });
-      }
-
-      return res.status(200).json({
-        hostel: {
-          _id: hostel._id,
-          name: hostel.name,
-          batches: hostel.batches.map((batch) => ({
-            name: batch.name,
-            students: batch.students,
-          })),
-        },
-      });
-    }
-
-    if (user.role === "student") {
-      let isStudentInHostel = false;
-      const otherStudents = [];
-
-      hostel.batches.forEach((batch) => {
-        batch.students.forEach((student) => {
-          if (student._id.toString() === user._id.toString()) {
-            isStudentInHostel = true;
-          } else {
-            otherStudents.push(student);
-          }
-        });
-      });
-
-      if (!isStudentInHostel) {
-        return res
-          .status(403)
-          .json({ message: "You are not part of this hostel" });
-      }
-
-      return res.status(200).json({
-        hostel: {
-          _id: hostel._id,
-          name: hostel.name,
-          otherStudents,
-        },
-      });
-    }
-
-    return res.status(403).json({ message: "Access denied." });
+    // Send full hostel details including batches
+    return res.status(200).json({ hostel });
   } catch (error) {
     console.error("Error in getHostelById:", error);
     res.status(500).json({ message: "Server error." });
   }
 };
 
+
 // controller method
 export const createBatchInHostel = async (req, res) => {
   const { hostelId } = req.params;
   const { name } = req.body;
   const userId = req.user._id;
+  const userRole = req.user.role;
 
   if (!name)
     return res.status(400).json({ message: "Batch name is required." });
@@ -153,14 +104,16 @@ export const createBatchInHostel = async (req, res) => {
 
     if (!hostel) return res.status(404).json({ message: "Hostel not found" });
 
-    // Check if user is assigned caretaker
+    // Allow if user is admin OR caretaker assigned to this hostel
     const isCaretaker = hostel.caretakers.some((caretakerId) =>
       caretakerId.equals(userId)
     );
-    if (!isCaretaker)
+
+    if (!(userRole === "admin" || isCaretaker)) {
       return res
         .status(403)
         .json({ message: "Not authorized to create batch in this hostel" });
+    }
 
     // Check for duplicate batch name
     const existingBatch = hostel.batches.find(
@@ -184,62 +137,46 @@ export const createBatchInHostel = async (req, res) => {
 };
 
 export const addStudentToBatch = async (req, res) => {
-  const { hostelId, batchName } = req.params;
-  const { studentId } = req.body;
+  const { hostelId, batchId } = req.params;
+  const { email } = req.body;
   const userId = req.user._id;
 
-  if (!studentId)
-    return res.status(400).json({ message: "Student ID is required" });
+  if (!email) return res.status(400).json({ message: "Student email is required" });
 
   try {
     const hostel = await Hostel.findById(hostelId);
     if (!hostel) return res.status(404).json({ message: "Hostel not found" });
 
-    // Check caretaker access
-    const isCaretaker = hostel.caretakers.includes(userId.toString());
+    const isCaretaker = hostel.caretakers.includes(userId.toString()) || req.user.role === "admin";
     if (!isCaretaker)
-      return res
-        .status(403)
-        .json({ message: "Not authorized to add student to this hostel" });
+      return res.status(403).json({ message: "Not authorized to add student to this hostel" });
 
-    // Find batch by name (case insensitive)
-    const batch = hostel.batches.find(
-      (b) => b.name.toLowerCase() === batchName.toLowerCase()
-    );
-    if (!batch)
-      return res
-        .status(404)
-        .json({ message: `Batch '${batchName}' not found` });
+    const batch = hostel.batches.id(batchId);
+    if (!batch) return res.status(404).json({ message: "Batch not found" });
 
-    // Prevent duplicate
-    if (batch.students.includes(studentId))
+    const student = await User.findOne({ email, role: "student" });
+    if (!student) return res.status(404).json({ message: "Student not found" });
+
+    if (batch.students.includes(student._id))
       return res.status(400).json({ message: "Student already in this batch" });
 
-    // Add student to batch
-    batch.students.push(studentId);
+    batch.students.push(student._id);
     await hostel.save();
 
-    // Update student's hostelId in User model
-    const student = await User.findById(studentId);
-    if (!student)
-      return res.status(404).json({ message: "Student not found" });
-
-    student.hostelId = hostelId; // Assign hostelId to student
+    student.hostelId = hostelId;
     await student.save();
 
-    res
-      .status(200)
-      .json({ message: `Student added to '${batch.name}' successfully` });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(200).json({ message: "Student added successfully", student });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
   }
 };
-
 
 export const renameBatch = async (req, res) => {
   const { hostelId, batchId } = req.params;
   const { newName } = req.body;
   const userId = req.user._id;
+  const userRole = req.user.role;
 
   if (!newName) {
     return res.status(400).json({ message: "New batch name is required" });
@@ -249,9 +186,11 @@ export const renameBatch = async (req, res) => {
     const hostel = await Hostel.findById(hostelId);
     if (!hostel) return res.status(404).json({ message: "Hostel not found" });
 
-    const isCaretaker = hostel.caretakers.includes(userId.toString());
-    if (!isCaretaker)
+    // Allow if admin or caretaker assigned to hostel
+    const isCaretaker = hostel.caretakers.some((id) => id.equals(userId));
+    if (!(userRole === "admin" || isCaretaker)) {
       return res.status(403).json({ message: "Not authorized" });
+    }
 
     const batch = hostel.batches.id(batchId);
     if (!batch) {
@@ -267,6 +206,7 @@ export const renameBatch = async (req, res) => {
   }
 };
 
+
 export const deleteBatch = async (req, res) => {
   const { hostelId, batchId } = req.params;
 
@@ -276,9 +216,12 @@ export const deleteBatch = async (req, res) => {
     return res.status(404).json({ message: "Hostel not found" });
   }
 
-  // Check if user is caretaker of this hostel
-  const isCaretaker = hostel.caretakers.includes(req.user._id);
-  if (!isCaretaker && req.user.role !== "caretaker") {
+  // Allow if user is admin OR assigned caretaker
+  const isCaretaker = hostel.caretakers.some(
+    (caretakerId) => caretakerId.equals(req.user._id)
+  );
+
+  if (!(req.user.role === "admin" || isCaretaker)) {
     return res
       .status(403)
       .json({ message: "Not authorized to delete batches from this hostel" });
@@ -299,65 +242,71 @@ export const deleteBatch = async (req, res) => {
 };
 
 export const getStudentsInBatch = async (req, res) => {
-  const { hostelId, batchName } = req.params;
+  const { hostelId, batchId } = req.params;
   const userId = req.user._id;
+  const userRole = req.user.role; // assuming role is set in auth middleware
 
   try {
     const hostel = await Hostel.findById(hostelId);
 
-    if (!hostel) return res.status(404).json({ message: "Hostel not found" });
+    if (!hostel) {
+      return res.status(404).json({ message: "Hostel not found" });
+    }
 
-    // Check if caretaker is assigned to this hostel
-    const isCaretaker = hostel.caretakers.includes(userId.toString());
-    if (!isCaretaker)
-      return res
-        .status(403)
-        .json({ message: "Not authorized to access this hostel's students" });
+    // Find the batch by ID
+    const batch = hostel.batches.id(batchId);
+    if (!batch) {
+      return res.status(404).json({ message: "Batch not found" });
+    }
 
-    const batch = hostel.batches.find(
-      (b) => b.name.toLowerCase() === batchName.toLowerCase()
-    );
+    // Authorization
+    const isCaretaker = hostel.caretakers.some((id) => id.equals(userId));
+    const isAdmin = userRole === "admin" || userRole === "superadmin";
+    const isStudentInBatch = batch.students.some((id) => id.equals(userId));
 
-    if (!batch)
-      return res
-        .status(404)
-        .json({ message: `Batch '${batchName}' not found` });
+    if (!(isCaretaker || isAdmin || isStudentInBatch)) {
+      return res.status(403).json({
+        message: "Not authorized to access this batch's students",
+      });
+    }
 
     // Populate student details
     const students = await User.find({
-      _id: { $in: batch.students.map((id) => new mongoose.Types.ObjectId(id)) },
+      _id: { $in: batch.students },
     }).select("-password");
 
     res.status(200).json({ students });
   } catch (error) {
+    console.error("Error in getStudentsInBatchById:", error);
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
+
 export const removeStudentFromBatch = async (req, res) => {
-  const { hostelId, batchName, studentId } = req.params;
+  const { hostelId, batchId, studentId } = req.params;
   const userId = req.user._id;
 
   try {
     const hostel = await Hostel.findById(hostelId);
     if (!hostel) return res.status(404).json({ message: "Hostel not found" });
 
-    // Check if caretaker is assigned to this hostel
-    const isCaretaker = hostel.caretakers.includes(userId.toString());
-    if (!isCaretaker)
+    // Allow caretaker assigned to this hostel OR admin
+    const isAuthorized =
+      hostel.caretakers.includes(userId.toString()) || req.user.role === "admin";
+    if (!isAuthorized)
       return res
         .status(403)
         .json({ message: "Not authorized to modify this hostel's batches" });
 
-    const batch = hostel.batches.find(
-      (b) => b.name.toLowerCase() === batchName.toLowerCase()
-    );
+    // Find batch by ID
+    const batch = hostel.batches.id(batchId);
     if (!batch)
-      return res
-        .status(404)
-        .json({ message: `Batch '${batchName}' not found` });
+      return res.status(404).json({ message: "Batch not found" });
 
-    const index = batch.students.indexOf(studentId);
+    const index = batch.students.findIndex(
+      (id) => id.toString() === studentId
+    );
     if (index === -1)
       return res
         .status(404)
@@ -373,3 +322,4 @@ export const removeStudentFromBatch = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+

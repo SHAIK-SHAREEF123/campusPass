@@ -1,11 +1,12 @@
 import express from "express";
-import { getStudentDashboard, caretakerDashboard } from "../controllers/dashboard.controller.js";
+import { getStudentDashboard, getCaretakerDashboard, getAdminDashboard } from "../controllers/dashboard.controller.js";
 import { verifyToken } from "../middlewares/verifyToken.middleware.js";
 import { authorizeRoles } from "../middlewares/authorizeRoles.middleware.js";
 
 const router = express.Router();
 
 router.get("/student", verifyToken, authorizeRoles("student"), getStudentDashboard);
-router.get("/caretaker", verifyToken, authorizeRoles("caretaker"), caretakerDashboard);
+router.get("/caretaker", verifyToken, authorizeRoles("caretaker"), getCaretakerDashboard);
+router.get("/admin", verifyToken, authorizeRoles("admin"), getAdminDashboard);
 
 export default router;

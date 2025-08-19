@@ -45,7 +45,7 @@ export default function Login() {
                 },
                 { withCredentials: true }
             );
-            console.log("End: ");
+            // console.log("End: ");
             // console.log(response.data);
             // Assuming response.data contains user info
             const userData = response.data;

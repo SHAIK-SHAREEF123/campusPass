@@ -42,7 +42,7 @@ export const getStudentDashboard = async (req, res) => {
   }
 };
 
-export const caretakerDashboard = async (req, res) => {
+export const getCaretakerDashboard = async (req, res) => {
   try {
     const caretakerId = req.user._id;
 
@@ -61,6 +61,44 @@ export const caretakerDashboard = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
+
+export const getAdminDashboard = async (req, res) => {
+  try {
+    // console.log("API call hitted");
+    // Total counts
+    const totalStudents = await User.countDocuments({ role: "student" });
+    const totalCaretakers = await User.countDocuments({ role: "caretaker" });
+    const totalAdmins = await User.countDocuments({ role: "admin" });
+    const totalHostels = await Hostel.countDocuments();
+    const totalOutpasses = await Outpass.countDocuments();
+
+    // Outpass status counts
+    const pendingOutpasses = await Outpass.countDocuments({ status: "pending" });
+    const approvedOutpasses = await Outpass.countDocuments({ status: "approved" });
+    const rejectedOutpasses = await Outpass.countDocuments({ status: "rejected" });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalStudents,
+        totalCaretakers,
+        totalAdmins,
+        totalHostels,
+        totalOutpasses,
+        pendingOutpasses,
+        approvedOutpasses,
+        rejectedOutpasses,
+      },
+    });
+  } catch (error) {
+    console.error("Error in getAdminDashboard:", error);
+    res.status(500).json({
+      success: false,
       message: "Server Error",
       error: error.message,
     });

@@ -77,10 +77,10 @@ const outpassSchema = new mongoose.Schema({
     default: null,
   },
 
-  photo: {
-    type: String,
-    required: true,
-  },
+  // photo: {
+  //   type: String,
+  //   required: true,
+  // },
 
   processedBy: {
     type: mongoose.Schema.Types.ObjectId,

@@ -1,8 +1,9 @@
 import Outpass from "../models/outpass.model.js";
+import mongoose from "mongoose";
 
 export const createOutpass = async (req, res) => {
-  // console.log(req.file);
   try {
+    // console.log(req.body);
     const { reason, destination, fromDate, toDate, parentContact } = req.body;
 
     const outpass = await Outpass.create({
@@ -12,7 +13,6 @@ export const createOutpass = async (req, res) => {
       fromDate,
       toDate,
       parentContact,
-      photo: `/uploads/outpass_photos/${req.file.filename}`,
     });
 
     res.status(201).json({
@@ -33,7 +33,7 @@ export const getMyOutpasses = async (req, res) => {
       createdAt: -1,
     });
 
-    res.status(200).json(outpasses);
+    res.status(200).json({ outpasses });
   } catch (error) {
     res.status(500).json({ message: "Server Error", error: error.message });
   }
@@ -49,7 +49,13 @@ export const getAllOutpasses = async (req, res) => {
 
     res.status(200).json(outpasses);
   } catch (error) {
-    res.status(500).json({ message: "Server Error", error: error.message });
+    res
+      .status(500)
+      .json({
+        success: false,
+        message: "Failed to fetch outpasses",
+        error: error.message,
+      });
   }
 };
 
@@ -70,6 +76,13 @@ export const getSingleOutpass = async (req, res) => {
     if (
       req.user.role === "student" &&
       outpass.student._id.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    if (
+      req.user.role === "parent" &&
+      outpass.student.parentId.toString() !== req.user._id.toString()
     ) {
       return res.status(403).json({ message: "Forbidden" });
     }
@@ -100,9 +113,8 @@ export const updateOutpassStatus = async (req, res) => {
       return res.status(400).json({ message: "Outpass already processed" });
     }
 
-    outpass.status = status;
+    outpass.caretakerApproval = status; // status = "approved" or "rejected"
     outpass.processedBy = req.user._id;
-
     await outpass.save();
 
     res.status(200).json({
@@ -133,9 +145,14 @@ export const deleteOutpass = async (req, res) => {
 
     // Allow delete only if both approvals are still pending
     if (
-      outpass.parentApprovalStatus !== "pending" ||
-      outpass.wardenStatus !== "pending"
+      outpass.parentApproval !== "pending" ||
+      outpass.caretakerApproval !== "pending"
     ) {
+      return res.status(400).json({
+        message: "Only outpasses with both approvals pending can be deleted",
+      });
+    }
+    {
       return res.status(400).json({
         message: "Only outpasses with both approvals pending can be deleted",
       });
@@ -248,6 +265,9 @@ export const verifyQRCode = async (req, res) => {
     }
 
     // Populate 'name' instead of 'fullName' from updated User model
+    if (!mongoose.Types.ObjectId.isValid(qrCodeData)) {
+      return res.status(400).json({ message: "Invalid QR code data" });
+    }
     const outpass = await Outpass.findById(qrCodeData).populate(
       "student",
       "name rollNumber email photo role hostelId"

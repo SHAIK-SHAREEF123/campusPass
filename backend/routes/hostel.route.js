@@ -29,18 +29,18 @@ router.get("/", verifyToken, authorizeRoles("admin"), getAllHostels);
 router.get("/:hostelId", verifyToken, getHostelById);
 
 // Caretaker creates a batch
-router.post("/:hostelId/create-batch",verifyToken,authorizeRoles("caretaker"),createBatchInHostel);
+router.post("/:hostelId/create-batch",verifyToken,authorizeRoles("admin", "caretaker"),createBatchInHostel);
 
 // Caretaker adds student to batch
-router.post("/:hostelId/batch/:batchName/add-student", verifyToken, authorizeRoles("caretaker"), addStudentToBatch);
+router.post("/:hostelId/batch/:batchId/add-student", verifyToken, authorizeRoles("admin","caretaker"), addStudentToBatch);
 
 // Rename a batch
-router.put("/:hostelId/batch/:batchId/rename",verifyToken,authorizeRoles("caretaker"),renameBatch);
+router.put("/:hostelId/batch/:batchId/rename",verifyToken,authorizeRoles("admin","caretaker"),renameBatch);
 
 // Delete a batch
-router.delete("/:hostelId/batch/:batchId",verifyToken,authorizeRoles("caretaker"),deleteBatch);
+router.delete("/:hostelId/batch/:batchId",verifyToken,authorizeRoles("admin", "caretaker"),deleteBatch);
 
-router.get("/:hostelId/batch/:batchName/students",verifyToken,authorizeRoles("caretaker"),getStudentsInBatch);
+router.get("/:hostelId/batch/:batchId/students",verifyToken,authorizeRoles("admin","caretaker","student"),getStudentsInBatch);
 
-router.delete("/:hostelId/batches/:batchName/remove-student/:studentId",verifyToken,authorizeRoles("caretaker"),removeStudentFromBatch);
+router.delete("/:hostelId/batch/:batchId/remove-student/:studentId",verifyToken,authorizeRoles("admin","caretaker"),removeStudentFromBatch);
 export default router;
