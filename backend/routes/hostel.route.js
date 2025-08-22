@@ -9,7 +9,8 @@ import {
   getStudentsInBatch,
   renameBatch,
   deleteBatch,
-  removeStudentFromBatch
+  removeStudentFromBatch,
+  deleteHostel
 } from "../controllers/hostel.controller.js";
 import { verifyToken } from "../middlewares/verifyToken.middleware.js";
 import { authorizeRoles } from "../middlewares/authorizeRoles.middleware.js";
@@ -36,6 +37,9 @@ router.post("/:hostelId/batch/:batchId/add-student", verifyToken, authorizeRoles
 
 // Rename a batch
 router.put("/:hostelId/batch/:batchId/rename",verifyToken,authorizeRoles("admin","caretaker"),renameBatch);
+
+//Delete a hostel
+router.delete("/:hostelId", verifyToken, authorizeRoles("admin"), deleteHostel);
 
 // Delete a batch
 router.delete("/:hostelId/batch/:batchId",verifyToken,authorizeRoles("admin", "caretaker"),deleteBatch);

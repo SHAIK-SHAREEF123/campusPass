@@ -24,6 +24,19 @@ export const createHostel = async (req, res) => {
   }
 };
 
+export const deleteHostel = async (req, res) => {
+  try {
+    const hostel = await Hostel.findById(req.params.hostelId);
+    if (!hostel) return res.status(404).json({ message: "Hostel not found" });
+
+    await hostel.deleteOne();
+    res.status(200).json({ message: "Hostel deleted successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to delete hostel" });
+  }
+};
+
 // Assign a caretaker to a hostel
 export const assignCaretakerToHostel = async (req, res) => {
   try {

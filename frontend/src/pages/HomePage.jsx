@@ -6,6 +6,7 @@ import Features from "../components/Features";
 import HowCampusPassWorks from "../components/HowCampusPassWorks";
 import WhyCampusPass from "../components/WhyCampusPass";
 import Footer from "../components/Footer";
+import Feedback from "../components/Feedback";
 
 const Home = () => {
     return (
@@ -20,6 +21,8 @@ const Home = () => {
             <HowCampusPassWorks />
 
             <WhyCampusPass />
+
+            <Feedback />
 
             {/* FOOTER */}
             <Footer />
