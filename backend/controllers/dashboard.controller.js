@@ -2,33 +2,45 @@ import User from "../models/user.model.js";
 import Hostel from "../models/hostel.model.js";
 import Outpass from "../models/outpass.model.js";
 
+// ---------------- Student Dashboard ----------------
 export const getStudentDashboard = async (req, res) => {
   try {
     const studentId = req.user._id;
 
-    // Fetch user to get hostelId and name
-    const user = await User.findById(studentId).select("name email hostelId");
-    if (!user) return res.status(404).json({ message: "Student not found" });
+    // Fetch student details
+    const user = await User.findById(studentId).select(
+      "name email profilePhoto hostelId"
+    );
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Student not found" });
+    }
 
-    // console.log(user);
+    // Fetch hostel
     const hostel = await Hostel.findById(user.hostelId);
-    if (!hostel) return res.status(404).json({ message: "Hostel not found" });
+    if (!hostel) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Hostel not found" });
+    }
 
-    // Find the batch that contains this student
+    // Find batch of the student
     const batch = hostel.batches.find((batch) =>
       batch.students.includes(studentId.toString())
     );
 
-    // Fetch all outpasses of this student
+    // Fetch student's outpasses
     const outpasses = await Outpass.find({ student: studentId }).sort({
       createdAt: -1,
     });
 
-
     res.status(200).json({
+      success: true,
       student: {
         name: user.name,
         email: user.email,
+        profilePhoto: user.profilePhoto,
         hostel: {
           _id: hostel._id,
           name: hostel.name,
@@ -38,29 +50,64 @@ export const getStudentDashboard = async (req, res) => {
       outpasses,
     });
   } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Server error", error: err.message });
   }
 };
 
+// ---------------- Caretaker Dashboard ----------------
 export const getCaretakerDashboard = async (req, res) => {
   try {
     const caretakerId = req.user._id;
 
-    // Fetch hostels where the user is a caretaker, and exclude 'admin' from the result
+    // Get hostels assigned to caretaker
     const hostels = await Hostel.find({ caretakers: caretakerId })
-      .select("-admin") // 🟢 exclude the 'admin' field
-      .populate("caretakers", "name email") // show caretaker name and email
+      .populate("caretakers", "name email")
       .populate({
         path: "batches.students",
-        select: "name email photo hostelId", // show specific student fields
+        select: "name email profilePhoto hostelId",
       });
 
+    if (!hostels.length) {
+      return res.status(200).json({
+        success: true,
+        message: "No hostels assigned",
+        hostels: [],
+        outpasses: [],
+        stats: { approvedCount: 0, pendingCount: 0, rejectedCount: 0 },
+      });
+    }
+
+    // Collect studentIds of all hostels
+    const studentIds = hostels.flatMap((hostel) =>
+      hostel.batches.flatMap((batch) => batch.students.map((s) => s._id))
+    );
+
+    // Fetch outpasses of those students
+    const outpasses = await Outpass.find({ student: { $in: studentIds } })
+      .populate("student", "name email hostelId profilePhoto")
+      .sort({ createdAt: -1 });
+
+    // Stats
+    const approvedCount = outpasses.filter(
+      (o) => o.status === "approved"
+    ).length;
+    const pendingCount = outpasses.filter((o) => o.status === "pending").length;
+    const rejectedCount = outpasses.filter(
+      (o) => o.status === "rejected"
+    ).length;
+
     res.status(200).json({
+      success: true,
       message: "Caretaker Dashboard",
       hostels,
+      outpasses,
+      stats: { approvedCount, pendingCount, rejectedCount },
     });
   } catch (error) {
     res.status(500).json({
+      success: false,
       message: "Server Error",
       error: error.message,
     });
@@ -78,9 +125,15 @@ export const getAdminDashboard = async (req, res) => {
     const totalOutpasses = await Outpass.countDocuments();
 
     // Outpass status counts
-    const pendingOutpasses = await Outpass.countDocuments({ status: "pending" });
-    const approvedOutpasses = await Outpass.countDocuments({ status: "approved" });
-    const rejectedOutpasses = await Outpass.countDocuments({ status: "rejected" });
+    const pendingOutpasses = await Outpass.countDocuments({
+      status: "pending",
+    });
+    const approvedOutpasses = await Outpass.countDocuments({
+      status: "approved",
+    });
+    const rejectedOutpasses = await Outpass.countDocuments({
+      status: "rejected",
+    });
 
     res.status(200).json({
       success: true,

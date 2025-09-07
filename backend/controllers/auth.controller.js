@@ -212,3 +212,4 @@ export const updateMyProfile = async (req, res) => {
       .json({ message: "Failed to update profile", error: error.message });
   }
 };
+

@@ -10,7 +10,10 @@ import {
   renameBatch,
   deleteBatch,
   removeStudentFromBatch,
-  deleteHostel
+  deleteHostel,
+  getAllCaretakers,
+  getCaretakersByHostelName,
+  removeCaretakerFromHostel
 } from "../controllers/hostel.controller.js";
 import { verifyToken } from "../middlewares/verifyToken.middleware.js";
 import { authorizeRoles } from "../middlewares/authorizeRoles.middleware.js";
@@ -21,13 +24,10 @@ const router = express.Router();
 router.post("/create", verifyToken, authorizeRoles("admin"), createHostel);
 
 //(Admin only)
-router.put("/:hostelId/assign-caretaker",verifyToken,authorizeRoles("admin"),assignCaretakerToHostel);
+router.post("/assign-caretaker", verifyToken, authorizeRoles("admin"), assignCaretakerToHostel);
 
-//(Admin only)
-router.get("/", verifyToken, authorizeRoles("admin"), getAllHostels);
+router.get("/", verifyToken, getAllHostels);
 
-// Get single hostel details
-router.get("/:hostelId", verifyToken, getHostelById);
 
 // Caretaker creates a batch
 router.post("/:hostelId/create-batch",verifyToken,authorizeRoles("admin", "caretaker"),createBatchInHostel);
@@ -47,4 +47,15 @@ router.delete("/:hostelId/batch/:batchId",verifyToken,authorizeRoles("admin", "c
 router.get("/:hostelId/batch/:batchId/students",verifyToken,authorizeRoles("admin","caretaker","student"),getStudentsInBatch);
 
 router.delete("/:hostelId/batch/:batchId/remove-student/:studentId",verifyToken,authorizeRoles("admin","caretaker"),removeStudentFromBatch);
+
+router.get("/caretakers", verifyToken, authorizeRoles("admin"), getAllCaretakers);
+
+router.get("/:hostelName/caretakers",verifyToken,authorizeRoles("admin"),getCaretakersByHostelName);
+
+router.post("/remove-caretaker", verifyToken, authorizeRoles("admin"),removeCaretakerFromHostel);
+
+
+// Get single hostel details
+router.get("/:hostelId", verifyToken, getHostelById);
+
 export default router;

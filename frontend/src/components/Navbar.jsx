@@ -50,23 +50,35 @@ export default function Navbar() {
     }
   };
 
-  // Role-based nav links
+    // Role-based nav links
   const roleLinks = {
     admin: [
+      { name: "Home", to: "/" },
       { name: "Dashboard", to: "/admin/dashboard" },
       { name: "Hostels", to: "/hostels" },
+      { name: "Create Hostel", to: "/create-hostel" },
     ],
     caretaker: [
+      { name: "Home", to: "/" },
       { name: "Dashboard", to: "/caretaker/dashboard" },
-      { name: "Batches", to: "/batches" },
+      { name: "Hostels", to: "/hostels" },
       { name: "Outpasses", to: "/outpasses" },
     ],
     student: [
+      { name: "Home", to: "/" },
       { name: "Dashboard", to: "/student/dashboard" },
       { name: "My Outpasses", to: "/outpass/my-outpasses" },
       { name: "Request Outpass", to: "/outpass/request" },
+      { name: "Hostels", to: "/hostels" },
+    ],
+    security: [
+      { name: "Home", to: "/" },
+      { name: "Dashboard", to: "/security/dashboard" },
+      { name: "Scan QR", to: "/security/scan" },
+      { name: "Logs", to: "/security/logs" },
     ],
   };
+
 
   const navLinks = user?.role
     ? roleLinks[user.role] || []
@@ -76,7 +88,7 @@ export default function Navbar() {
       ];
 
   return (
-    <nav className="sticky top-0 z-50 bg-black/70 backdrop-blur-md border-b border-purple-800 shadow-md">
+    <nav className="sticky top-0 z-50 bg-black border-b border-purple-800 shadow-lg shadow-purple-900/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-0">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -138,7 +150,7 @@ export default function Navbar() {
               )
             )}
 
-            {user && (
+            {/* {user && (
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
                 <Link
                   to="/chat"
@@ -147,7 +159,7 @@ export default function Navbar() {
                   Chat
                 </Link>
               </motion.div>
-            )}
+            )} */}
 
             {!user ? (
               <div className="flex items-center space-x-4">
@@ -263,7 +275,7 @@ export default function Navbar() {
               )
             )}
 
-            {user && (
+            {/* {user && (
               <Link
                 to="/chat"
                 className="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-purple-700 transition-all duration-300"
@@ -271,7 +283,7 @@ export default function Navbar() {
               >
                 Chat
               </Link>
-            )}
+            )} */}
 
             {!user ? (
               <>

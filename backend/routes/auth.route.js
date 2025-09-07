@@ -16,6 +16,7 @@ import {
 } from "../validators/authValidators.js";
 
 import { upload } from '../config/cloudinary.js';
+import { authorizeRoles } from "../middlewares/authorizeRoles.middleware.js";
 
 const router = express.Router();
 

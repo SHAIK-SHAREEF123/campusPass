@@ -17,6 +17,7 @@ export default function HostelsPage() {
         const res = await axios.get("http://localhost:5000/api/hostels", {
           withCredentials: true,
         });
+        // console.log(res.data);
         setHostels(res.data.hostels || []);
       } catch (err) {
         console.error("Error fetching hostels:", err);
@@ -75,6 +76,7 @@ export default function HostelsPage() {
               Manage and explore all available hostels
             </p>
           </div>
+          {/* ✅ Show Create Hostel button only for admin */}
           {user?.role === "admin" && (
             <Link
               to="/create-hostel"
@@ -105,6 +107,7 @@ export default function HostelsPage() {
                   easy management.
                 </p>
               </div>
+              {/* ✅ Show Create Hostel button only for admin */}
               {user?.role === "admin" && (
                 <Link
                   to="/create-hostel"
@@ -130,7 +133,7 @@ export default function HostelsPage() {
                 {/* Top bar gradient */}
                 <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500"></div>
 
-                {/* Delete button (admins only) */}
+                {/* ✅ Delete button (admins only) */}
                 {user?.role === "admin" && (
                   <div className="absolute top-3 right-3 z-50">
                     <div className="relative group">

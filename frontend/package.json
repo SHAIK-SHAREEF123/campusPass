@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "host": "vite --host",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -12,6 +13,7 @@
   "dependencies": {
     "@reduxjs/toolkit": "^2.8.2",
     "@tailwindcss/vite": "^4.1.11",
+    "@zxing/library": "^0.21.3",
     "axios": "^1.11.0",
     "framer-motion": "^12.23.12",
     "lucide-react": "^0.536.0",
@@ -23,6 +25,7 @@
     "react-router-dom": "^7.7.1",
     "react-scroll": "^1.9.3",
     "react-toastify": "^11.0.5",
+    "react-zxing": "^2.1.0",
     "tailwindcss": "^4.1.11"
   },
   "devDependencies": {

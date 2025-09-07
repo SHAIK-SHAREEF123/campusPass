@@ -7,6 +7,11 @@ const outpassSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
+  hostel: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Hostel",
+    required: true,
+  },
   reason: {
     type: String,
     required: true,
@@ -35,22 +40,15 @@ const outpassSchema = new mongoose.Schema({
     },
   },
 
-  // Approval statuses
-  parentApproval: {
-    type: String,
-    enum: ["pending", "approved", "rejected"],
-    default: "pending",
-  },
   caretakerApproval: {
     type: String,
     enum: ["pending", "approved", "rejected"],
     default: "pending",
   },
 
-  // Final status (auto-calculated)
   status: {
     type: String,
-    enum: ["pending", "approved", "rejected"],
+    enum: ["pending", "approved", "rejected", "cancelled"],
     default: "pending",
   },
 
@@ -59,7 +57,6 @@ const outpassSchema = new mongoose.Schema({
     default: Date.now,
   },
 
-  // QR-related fields
   qrCode: {
     type: String, // base64 image
     default: null,
@@ -76,11 +73,12 @@ const outpassSchema = new mongoose.Schema({
     type: Date,
     default: null,
   },
-
-  // photo: {
-  //   type: String,
-  //   required: true,
-  // },
+  entryTime: {
+    type: Date,
+  },
+  exitTime: {
+    type: Date,
+  },
 
   processedBy: {
     type: mongoose.Schema.Types.ObjectId,
@@ -90,16 +88,14 @@ const outpassSchema = new mongoose.Schema({
 
 // Auto-status update and QR generation
 outpassSchema.pre("save", async function (next) {
-  if (
-    this.parentApproval === "approved" &&
-    this.caretakerApproval === "approved"
-  ) {
+  if (this.caretakerApproval === "approved") {
     this.status = "approved";
 
     // Generate QR only once
     if (!this.qrCode) {
       try {
-        const qrData = `outpass:${this._id}`;
+        // Instead of plain ID, generate a full frontend link
+        const qrData = `${process.env.CLIENT_URL}/outpass/${this._id}`;
         const qrImage = await QRCode.toDataURL(qrData);
         this.qrCode = qrImage;
         this.qrGeneratedAt = new Date(); // Track for expiry
@@ -107,10 +103,7 @@ outpassSchema.pre("save", async function (next) {
         console.error("QR generation failed:", err);
       }
     }
-  } else if (
-    this.parentApproval === "rejected" ||
-    this.caretakerApproval === "rejected"
-  ) {
+  } else if (this.caretakerApproval === "rejected") {
     this.status = "rejected";
   } else {
     this.status = "pending";

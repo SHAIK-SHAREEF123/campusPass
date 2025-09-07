@@ -37,36 +37,10 @@ export const deleteHostel = async (req, res) => {
   }
 };
 
-// Assign a caretaker to a hostel
-export const assignCaretakerToHostel = async (req, res) => {
-  try {
-    const { hostelId } = req.params;
-    const { caretakerId } = req.body;
-
-    const caretaker = await User.findById(caretakerId);
-    if (!caretaker || caretaker.role !== "caretaker") {
-      return res.status(400).json({ message: "Invalid caretaker" });
-    }
-
-    const hostel = await Hostel.findById(hostelId);
-    if (!hostel) {
-      return res.status(404).json({ message: "Hostel not found" });
-    }
-
-    if (!hostel.caretakers.includes(caretakerId)) {
-      hostel.caretakers.push(caretakerId);
-      await hostel.save();
-    }
-
-    res.status(200).json({ message: "Caretaker assigned", hostel });
-  } catch (error) {
-    res.status(500).json({ message: "Error assigning caretaker", error });
-  }
-};
-
-// Get all hostels (Admin only)
+// Get all hostels
 export const getAllHostels = async (req, res) => {
   try {
+    // console.log("Hitting backend");
     const hostels = await Hostel.find()
       .populate("admin", "name email")
       .populate("caretakers", "name email");
@@ -273,7 +247,7 @@ export const getStudentsInBatch = async (req, res) => {
     }
 
     // Authorization
-    const isCaretaker = hostel.caretakers.some((id) => id.equals(userId));
+    const isCaretaker = User.findOne({ _id: userId, role: "caretaker"});
     const isAdmin = userRole === "admin" || userRole === "superadmin";
     const isStudentInBatch = batch.students.some((id) => id.equals(userId));
 
@@ -288,7 +262,11 @@ export const getStudentsInBatch = async (req, res) => {
       _id: { $in: batch.students },
     }).select("-password");
 
-    res.status(200).json({ students });
+    res.status(200).json({ 
+      hostelName : hostel.name,
+      batchName :  batch.name,
+      students
+    });
   } catch (error) {
     console.error("Error in getStudentsInBatchById:", error);
     res.status(500).json({ message: "Server error", error: error.message });
@@ -335,4 +313,132 @@ export const removeStudentFromBatch = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+export const getAllCaretakers = async (req, res) => {
+  try {
+    // console.log("Coming getAllCaretakers controller");
+    const caretakers = await User.find({ role: "caretaker" }).select("name email");
+    if (!caretakers || caretakers.length === 0) {
+      return res.status(404).json({ message: "No caretakers found" });
+    }
+    res.status(200).json({ caretakers });
+  } catch (error) {
+    console.error("Error fetching caretakers:", error);
+    res.status(500).json({ message: "Failed to fetch caretakers" });
+  }
+};
+
+// Assign caretaker to a hostel
+export const assignCaretakerToHostel = async (req, res) => {
+  try {
+    const { hostelName, caretakerEmail } = req.body;
+
+    if (!hostelName || !caretakerEmail) {
+      return res.status(400).json({
+        success: false,
+        message: "Hostel name and caretaker email are required",
+      });
+    }
+
+    // Find caretaker by email & role
+    const caretaker = await User.findOne({ email: caretakerEmail, role: "caretaker" });
+    if (!caretaker) {
+      return res.status(404).json({ success: false, message: "Caretaker not found" });
+    }
+
+    // Assign caretaker to hostel
+    const hostel = await Hostel.findOneAndUpdate(
+      { name: hostelName },
+      { $addToSet: { caretakers: caretaker._id } }, // prevents duplicates
+      { new: true }
+    ).populate("caretakers", "name email");
+
+    if (!hostel) {
+      return res.status(404).json({ success: false, message: "Hostel not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Caretaker ${caretaker.name} assigned successfully to hostel ${hostel.name}`,
+      hostel,
+    });
+  } catch (error) {
+    console.error("Error assigning caretaker:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to assign caretaker",
+      error: error.message,
+    });
+  }
+};
+
+
+
+export const getCaretakersByHostelName = async (req, res) => {
+  try {
+    const { hostelName } = req.params;
+
+    if (!hostelName) {
+      return res.status(400).json({ message: "Hostel name is required" });
+    }
+
+    // Find hostel by name
+    const hostel = await Hostel.findOne({ name: hostelName }).populate(
+      "caretakers",
+      "name email"
+    );
+
+    if (!hostel) {
+      return res.status(404).json({ message: "Hostel not found" });
+    }
+
+    res.status(200).json({ caretakers: hostel.caretakers });
+  } catch (error) {
+    console.error("Error fetching caretakers:", error);
+    res.status(500).json({ message: "Failed to fetch caretakers" });
+  }
+};
+
+
+export const removeCaretakerFromHostel = async (req, res) => {
+  try {
+    const { hostelName, caretakerEmail } = req.body;
+
+    if (!hostelName || !caretakerEmail) {
+      return res.status(400).json({ message: "Hostel name and caretaker email are required" });
+    }
+
+    // Find caretaker
+    const caretaker = await User.findOne({ email: caretakerEmail, role: "caretaker" });
+    if (!caretaker) {
+      return res.status(404).json({ message: "Caretaker not found" });
+    }
+
+    // Find hostel by name
+    const hostel = await Hostel.findOne({ name: hostelName });
+    if (!hostel) {
+      return res.status(404).json({ message: "Hostel not found" });
+    }
+
+    // Check if caretaker is actually assigned
+    if (!hostel.caretakers.includes(caretaker._id)) {
+      return res.status(400).json({ message: "Caretaker is not assigned to this hostel" });
+    }
+
+    // Remove caretaker
+    hostel.caretakers = hostel.caretakers.filter(
+      (id) => id.toString() !== caretaker._id.toString()
+    );
+    await hostel.save();
+
+    res.status(200).json({
+      message: `Caretaker ${caretaker.name} removed successfully from hostel ${hostel.name}`,
+      hostel,
+    });
+  } catch (error) {
+    console.error("Error removing caretaker:", error);
+    res.status(500).json({ message: "Failed to remove caretaker" });
+  }
+};
+
 
