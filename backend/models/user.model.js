@@ -18,9 +18,7 @@ const userSchema = new mongoose.Schema(
     hostelId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Hostel",
-      required: function () {
-        return ["student", "caretaker"].includes(this.role);
-      },
+      default: null,
     },
   },
   { timestamps: true }
