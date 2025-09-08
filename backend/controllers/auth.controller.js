@@ -12,12 +12,12 @@ const generateToken = (id) => {
 
 const setToken = (res, token) => {
   res.cookie("token", token, {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax",
-  path: "/"
-});
-
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production", // must be true on HTTPS
+    sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+    path: "/",
+    maxAge: 1000 * 60 * 60 * 24, // 1 day
+  });
 };
 
 // REGISTER
