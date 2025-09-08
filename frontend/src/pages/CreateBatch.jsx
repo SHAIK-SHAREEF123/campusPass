@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import API from "../utils/axiosInstance";
 
 export default function CreateBatch() {
   const { hostelId } = useParams();
@@ -21,8 +22,8 @@ export default function CreateBatch() {
 
     try {
       // Your backend API route for creating batch inside hostel
-      const res = await axios.post(
-        `http://localhost:5000/api/hostels/${hostelId}/create-batch`,
+      const res = await API.post(
+        `/hostels/${hostelId}/create-batch`,
         { name: batchName },
         { withCredentials: true }
       );

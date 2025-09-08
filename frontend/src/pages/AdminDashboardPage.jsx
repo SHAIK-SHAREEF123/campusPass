@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import API from "../utils/axiosInstance";
 
 const AdminDashboardPage = () => {
   const [stats, setStats] = useState(null);
@@ -7,11 +8,8 @@ const AdminDashboardPage = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/dashboard/admin", {
-          credentials: "include",
-        });
-        const data = await response.json();
-        setStats(data.data);
+        const response = await API.get("/dashboard/admin");
+        setStats(response.data.data);
       } catch (error) {
         console.error("Error fetching admin dashboard:", error);
       } finally {
@@ -21,6 +19,7 @@ const AdminDashboardPage = () => {
 
     fetchDashboardData();
   }, []);
+
 
   if (loading) {
     return (
@@ -159,7 +158,7 @@ const AdminDashboardPage = () => {
             </div>
             Outpass Status Overview
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 hover:shadow-lg transition-all duration-300">
               <div className="absolute top-0 right-0 w-20 h-20 bg-amber-200/30 rounded-full -translate-y-10 translate-x-10"></div>
@@ -251,13 +250,12 @@ const AdminDashboardPage = () => {
                         </td>
                         <td className="p-4">
                           <span
-                            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                              op.status === "approved"
+                            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${op.status === "approved"
                                 ? "bg-green-100 text-green-800 border border-green-200"
                                 : op.status === "pending"
-                                ? "bg-amber-100 text-amber-800 border border-amber-200"
-                                : "bg-red-100 text-red-800 border border-red-200"
-                            }`}
+                                  ? "bg-amber-100 text-amber-800 border border-amber-200"
+                                  : "bg-red-100 text-red-800 border border-red-200"
+                              }`}
                           >
                             {op.status === "approved" && (
                               <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import axios from "axios";
+import API from "../utils/axiosInstance";
 
 const OutpassDetails = () => {
   const { id } = useParams(); // use outpassId, not hostelId
@@ -13,8 +14,8 @@ const OutpassDetails = () => {
   useEffect(() => {
     const fetchOutpass = async () => {
       try {
-        const res = await axios.get(
-          `http://localhost:5000/api/outpass/${id}`,
+        const res = await API.get(
+          `/outpass/${id}`,
           { withCredentials: true }
         );
         setOutpass(res.data);
@@ -29,8 +30,8 @@ const OutpassDetails = () => {
 
   const handleVerify = async () => {
     try {
-      const res = await axios.put(
-        `http://localhost:5000/api/outpass/${id}/verify`,
+      const res = await API.put(
+        `/outpass/${id}/verify`,
         {},
         { withCredentials: true }
       );

@@ -4,6 +4,7 @@ import { BrowserMultiFormatReader, NotFoundException } from "@zxing/library";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import API from "../utils/axiosInstance";
 
 export default function ScanQR() {
   const user = useSelector((state) => state.auth.user);
@@ -34,8 +35,8 @@ export default function ScanQR() {
       try {
         // Extract outpass ID from scanned URL
         const id = result.split("/").pop();
-        const { data } = await axios.get(
-          `http://localhost:5000/api/outpass/${id}`
+        const { data } = await API.get(
+          `/outpass/${id}`
         );
         setOutpassDetails(data);
       } catch (err) {

@@ -4,6 +4,7 @@ import { setUser } from "../redux/authSlice";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
+import API from "../utils/axiosInstance";
 
 export default function Settings() {
   const dispatch = useDispatch();
@@ -42,8 +43,8 @@ export default function Settings() {
         formPayload.append("profilePhoto", formData.profilePhoto);
       }
 
-      const response = await axios.put(
-        "http://localhost:5000/api/auth/profile/update",
+      const response = await API.put(
+        "/auth/profile/update",
         formPayload,
         {
           withCredentials: true,

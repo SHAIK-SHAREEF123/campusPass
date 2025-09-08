@@ -116,8 +116,7 @@ export const getCaretakerDashboard = async (req, res) => {
 
 export const getAdminDashboard = async (req, res) => {
   try {
-    // console.log("API call hitted");
-    // Total counts
+    // Counts
     const totalStudents = await User.countDocuments({ role: "student" });
     const totalCaretakers = await User.countDocuments({ role: "caretaker" });
     const totalAdmins = await User.countDocuments({ role: "admin" });
@@ -125,15 +124,15 @@ export const getAdminDashboard = async (req, res) => {
     const totalOutpasses = await Outpass.countDocuments();
 
     // Outpass status counts
-    const pendingOutpasses = await Outpass.countDocuments({
-      status: "pending",
-    });
-    const approvedOutpasses = await Outpass.countDocuments({
-      status: "approved",
-    });
-    const rejectedOutpasses = await Outpass.countDocuments({
-      status: "rejected",
-    });
+    const pendingOutpasses = await Outpass.countDocuments({ status: "pending" });
+    const approvedOutpasses = await Outpass.countDocuments({ status: "approved" });
+    const rejectedOutpasses = await Outpass.countDocuments({ status: "rejected" });
+
+    // ✅ Get recent 5 outpasses with student info
+    const recentOutpasses = await Outpass.find()
+      .populate("student", "name email")
+      .sort({ createdAt: -1 })
+      .limit(5);
 
     res.status(200).json({
       success: true,
@@ -146,6 +145,7 @@ export const getAdminDashboard = async (req, res) => {
         pendingOutpasses,
         approvedOutpasses,
         rejectedOutpasses,
+        recentOutpasses,
       },
     });
   } catch (error) {
@@ -157,3 +157,4 @@ export const getAdminDashboard = async (req, res) => {
     });
   }
 };
+

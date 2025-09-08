@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Home, Star, LogIn, UserPlus } from "lucide-react"; // ✅ added icons
+import { Home, Star, LogIn, UserPlus } from "lucide-react";
 import { logout } from "../redux/authSlice";
 import { Link as ScrollLink } from "react-scroll";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
+import API from "../utils/axiosInstance";
 // React Icons
 import { FaUserCircle, FaCog, FaSignOutAlt, FaSignInAlt } from "react-icons/fa";
 import { HiMenu, HiX } from "react-icons/hi";
@@ -34,8 +35,8 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      await axios.post(
-        "http://localhost:5000/api/auth/logout",
+      await API.post(
+        "/auth/logout",
         {},
         { withCredentials: true }
       );

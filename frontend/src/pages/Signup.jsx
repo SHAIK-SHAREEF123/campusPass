@@ -17,6 +17,7 @@ import {
   CheckCircle,
   ArrowRight,
 } from "lucide-react";
+import API from "../utils/axiosInstance";
 
 export default function Signup() {
   const dispatch = useDispatch();
@@ -96,8 +97,8 @@ export default function Signup() {
         if (value) form.append(key, value);
       });
 
-      const res = await axios.post(
-        "http://localhost:5000/api/auth/signup",
+      const res = await API.post(
+        "/auth/signup",
         form,
         {
           headers: { "Content-Type": "multipart/form-data" },

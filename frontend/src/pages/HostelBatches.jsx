@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import API from "../utils/axiosInstance";
 
 export default function HostelBatches() {
   const { hostelId } = useParams();
@@ -19,7 +19,7 @@ export default function HostelBatches() {
 
     const fetchHostel = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/hostels/${hostelId}`, {
+        const res = await API.get(`/hostels/${hostelId}`, {
           withCredentials: true,
         });
         setHostel(res.data.hostel);
@@ -38,7 +38,7 @@ export default function HostelBatches() {
   const refreshHostel = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`http://localhost:5000/api/hostels/${hostelId}`, {
+      const res = await API.get(`/hostels/${hostelId}`, {
         withCredentials: true,
       });
       setHostel(res.data.hostel);
@@ -54,8 +54,8 @@ export default function HostelBatches() {
   const handleRenameSubmit = async (batchId) => {
     if (!newBatchName.trim()) return alert("Batch name cannot be empty");
     try {
-      await axios.put(
-        `http://localhost:5000/api/hostels/${hostelId}/batch/${batchId}/rename`,
+      await API.put(
+        `/hostels/${hostelId}/batch/${batchId}/rename`,
         { newName: newBatchName },
         { withCredentials: true }
       );
@@ -73,8 +73,8 @@ export default function HostelBatches() {
     if (!window.confirm("Are you sure you want to delete this batch?")) return;
 
     try {
-      await axios.delete(
-        `http://localhost:5000/api/hostels/${hostelId}/batch/${batchId}`,
+      await API.delete(
+        `/hostels/${hostelId}/batch/${batchId}`,
         { withCredentials: true }
       );
       refreshHostel();

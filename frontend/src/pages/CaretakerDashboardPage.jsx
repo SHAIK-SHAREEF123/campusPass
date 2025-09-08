@@ -9,6 +9,7 @@ import {
     Clock,
     XCircle,
 } from "lucide-react";
+import API from "../utils/axiosInstance";
 
 const CaretakerDashboardPage = () => {
     const [hostels, setHostels] = useState([]);
@@ -19,7 +20,7 @@ const CaretakerDashboardPage = () => {
     useEffect(() => {
         const fetchDashboard = async () => {
             try {
-                const res = await axios.get("http://localhost:5000/api/dashboard/caretaker", {
+                const res = await API.get("/dashboard/caretaker", {
                     withCredentials: true,
                 });
                 setHostels(res.data.hostels);

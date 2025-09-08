@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { useSelector } from "react-redux";
+import API from "../utils/axiosInstance";
 
 export default function BatchStudentsPage() {
   const { hostelId, batchId } = useParams();
@@ -20,8 +21,8 @@ export default function BatchStudentsPage() {
   const fetchStudents = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(
-        `http://localhost:5000/api/hostels/${hostelId}/batch/${batchId}/students`,
+      const res = await API.get(
+        `/hostels/${hostelId}/batch/${batchId}/students`,
         { withCredentials: true }
       );
       // console.log(res.data);
@@ -46,8 +47,8 @@ export default function BatchStudentsPage() {
 
     setIsAddingStudent(true);
     try {
-      await axios.post(
-        `http://localhost:5000/api/hostels/${hostelId}/batch/${batchId}/add-student`,
+      await API.post(
+        `/hostels/${hostelId}/batch/${batchId}/add-student`,
         { email: newStudentEmail },
         { withCredentials: true }
       );
@@ -68,8 +69,8 @@ export default function BatchStudentsPage() {
     if (!window.confirm("Remove this student?")) return;
 
     try {
-      await axios.delete(
-        `http://localhost:5000/api/hostels/${hostelId}/batch/${batchId}/remove-student/${studentId}`,
+      await API.delete(
+        `/hostels/${hostelId}/batch/${batchId}/remove-student/${studentId}`,
         { withCredentials: true }
       );
       fetchStudents();

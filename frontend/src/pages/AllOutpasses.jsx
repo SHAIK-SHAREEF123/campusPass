@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
+import API from "../utils/axiosInstance";
 
 const AllOutpassesPage = () => {
   const [outpasses, setOutpasses] = useState([]);
@@ -12,7 +13,7 @@ const AllOutpassesPage = () => {
   const fetchOutpasses = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("http://localhost:5000/api/outpass", {
+      const res = await API.get("/outpass", {
         withCredentials: true,
       });
       setOutpasses(res.data || []);
@@ -34,8 +35,8 @@ const AllOutpassesPage = () => {
     try {
       setProcessingId(id);
 
-      await axios.put(
-        `http://localhost:5000/api/outpass/${id}/status`,
+      await API.put(
+        `/outpass/${id}/status`,
         { status: decision }, // approved / rejected
         { withCredentials: true }
       );

@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { Eye, EyeOff, Mail, Lock, ArrowRight, Sparkles, AlertCircle, CheckCircle } from "lucide-react";
+import API from "../utils/axiosInstance";
 
 // Animation variants for Framer Motion-like effects
 const fadeInUp = {
@@ -76,8 +77,8 @@ export default function Login() {
     setUiState(prev => ({ ...prev, isLoading: true, error: "", success: "" }));
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/login",
+      const response = await API.post(
+        "/auth/login",
         {
           email: formData.email.trim(),
           password: formData.password,

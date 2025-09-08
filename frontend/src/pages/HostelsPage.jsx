@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { Home, Building, Trash2 } from "lucide-react";
+import API from "../utils/axiosInstance";
 
 export default function HostelsPage() {
   const { user } = useSelector((state) => state.auth);
@@ -14,7 +14,7 @@ export default function HostelsPage() {
   useEffect(() => {
     const fetchHostels = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/hostels", {
+        const res = await API.get("/hostels", {
           withCredentials: true,
         });
         // console.log(res.data);
@@ -35,7 +35,7 @@ export default function HostelsPage() {
     if (!window.confirm("Are you sure you want to delete this hostel?")) return;
     try {
       setDeletingId(hostelId);
-      await axios.delete(`http://localhost:5000/api/hostels/${hostelId}`, {
+      await API.delete(`/hostels/${hostelId}`, {
         withCredentials: true,
       });
       setHostels((prev) => prev.filter((h) => h._id !== hostelId));

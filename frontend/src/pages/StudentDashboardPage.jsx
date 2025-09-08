@@ -10,6 +10,7 @@ import {
   XCircle,
   PlusCircle,
 } from "lucide-react";
+import API from "../utils/axiosInstance";
 
 const StudentDashboardPage = () => {
   const [student, setStudent] = useState(null);
@@ -20,7 +21,7 @@ const StudentDashboardPage = () => {
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/dashboard/student", {
+        const res = await API.get("/dashboard/student", {
           withCredentials: true,
         });
         // console.log(res.data);

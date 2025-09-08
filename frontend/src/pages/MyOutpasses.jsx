@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
 import { setOutpasses, setLoading, setError } from "../redux/outpassSlice";
 import toast from "react-hot-toast";
+import API from "../utils/axiosInstance";
 
 const MyOutpasses = () => {
   const dispatch = useDispatch();
@@ -15,8 +16,8 @@ const MyOutpasses = () => {
   const fetchOutpasses = async () => {
     try {
       dispatch(setLoading(true));
-      const res = await axios.get(
-        "http://localhost:5000/api/outpass/my-outpasses",
+      const res = await API.get(
+        "/outpass/my-outpasses",
         { withCredentials: true }
       );
 
@@ -39,8 +40,8 @@ const MyOutpasses = () => {
 
   const cancelOutpass = async (id) => {
     try {
-      await axios.delete(
-        `http://localhost:5000/api/outpass/cancel/${id}`,
+      await API.delete(
+        `/outpass/cancel/${id}`,
         { withCredentials: true }
       );
       toast.success("Outpass cancelled successfully!");

@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import axios from "axios";
 import {useNavigate} from "react-router-dom";
 import toast from "react-hot-toast";
+import API from "../utils/axiosInstance";
 
 const RequestOutpass = () => {
   const { user } = useSelector((state) => state.auth);
@@ -20,7 +21,7 @@ const RequestOutpass = () => {
   useEffect(() => {
     const fetchHostels = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/hostels", {
+        const response = await API.get("/hostels", {
           withCredentials: true,
         });
         setHostels(response.data.hostels || []);
@@ -70,8 +71,8 @@ const RequestOutpass = () => {
     };
 
     try {
-      const { data } = await axios.post(
-        "http://localhost:5000/api/outpass/create",
+      const { data } = await API.post(
+        "/outpass/create",
         requestData,
         { withCredentials: true }
       );

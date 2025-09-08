@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import API from "../utils/axiosInstance";
 
 export default function CreateHostel() {
   const [name, setName] = useState("");
@@ -18,8 +19,8 @@ export default function CreateHostel() {
 
     setIsSubmitting(true);
     try {
-      const { data } = await axios.post(
-        "http://localhost:5000/api/hostels/create",
+      const { data } = await API.post(
+        "/hostels/create",
         { name },
         { withCredentials: true }
       );

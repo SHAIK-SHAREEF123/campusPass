@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import API from "../utils/axiosInstance";
 
 export default function AssignCaretaker() {
     const [hostels, setHostels] = useState([]);
@@ -19,7 +20,7 @@ export default function AssignCaretaker() {
 
     const fetchHostels = async () => {
         try {
-            const res = await axios.get("http://localhost:5000/api/hostels", {
+            const res = await API.get("/hostels", {
                 withCredentials: true,
             });
             setHostels(res.data.hostels);
@@ -31,7 +32,7 @@ export default function AssignCaretaker() {
 
     const fetchCaretakers = async () => {
         try {
-            const res = await axios.get("http://localhost:5000/api/hostels/caretakers", {
+            const res = await API.get("/hostels/caretakers", {
                 withCredentials: true,
             });
             setCaretakers(res.data.caretakers);
@@ -49,8 +50,8 @@ export default function AssignCaretaker() {
 
         setIsLoading(true);
         try {
-            await axios.post(
-                `http://localhost:5000/api/hostels/assign-caretaker`,
+            await API.post(
+                `/hostels/assign-caretaker`,
                 { hostelName: selectedHostel, caretakerEmail: selectedCaretaker },
                 { withCredentials: true }
             );

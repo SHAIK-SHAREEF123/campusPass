@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import API from "../utils/axiosInstance";
 
 export default function RemoveCaretakerPage() {
   const [hostels, setHostels] = useState([]);
@@ -15,7 +16,7 @@ export default function RemoveCaretakerPage() {
   useEffect(() => {
     const fetchHostels = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/hostels", {
+        const res = await API.get("/hostels", {
           withCredentials: true,
         });
         setHostels(res.data.hostels || []);
@@ -33,8 +34,8 @@ export default function RemoveCaretakerPage() {
     const fetchCaretakers = async () => {
       setLoadingCaretakers(true);
       try {
-        const res = await axios.get(
-          `http://localhost:5000/api/hostels/${selectedHostel}/caretakers`,
+        const res = await API.get(
+          `/hostels/${selectedHostel}/caretakers`,
           { withCredentials: true }
         );
         setCaretakers(res.data.caretakers || []);
@@ -51,8 +52,8 @@ export default function RemoveCaretakerPage() {
   // ✅ Remove caretaker
   const handleRemoveCaretaker = async (caretakerEmail) => {
     try {
-      await axios.post(
-        "http://localhost:5000/api/hostels/remove-caretaker",
+      await API.post(
+        "/hostels/remove-caretaker",
         {
           hostelName: selectedHostel,
           caretakerEmail,
