@@ -100,7 +100,7 @@ export default function Navbar() {
               onClick={() => setMobileMenuOpen(false)}
             >
               <img
-                src="logo.jpeg"
+                src="/logo.jpeg"
                 alt="CampusPass Logo"
                 className="w-10 h-10 object-contain"
               />
