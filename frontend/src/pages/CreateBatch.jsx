@@ -88,7 +88,7 @@ export default function CreateBatch() {
                     type="text"
                     value={batchName}
                     onChange={(e) => setBatchName(e.target.value)}
-                    className={`w-full px-4 py-4 text-lg border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-100 ${
+                    className={`w-full px-4 py-4 text-lg text-black border-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-100 ${
                       error 
                         ? 'border-red-300 focus:border-red-500' 
                         : 'border-slate-200 focus:border-blue-500'
